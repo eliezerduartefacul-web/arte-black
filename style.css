@@ -1,14 +1,21 @@
 
+/* ==========================================
+   ARTE BLACK - CATÁLOGO DIGITAL
+   IDENTIDADE VISUAL: PRETO E DOURADO
+========================================== */
+
 :root {
     --black: #080808;
     --black-light: #111111;
     --black-card: #171717;
-    --gold: #D99A27;
-    --gold-light: #F0BD58;
+    --gold: #D4AF37;
+    --gold-light: #F0CF55;
     --white: #F5F5F5;
     --gray: #999999;
-    --border: rgba(217, 154, 39, 0.2);
+    --border: rgba(212, 175, 55, 0.2);
 }
+
+/* RESET */
 
 * {
     margin: 0;
@@ -23,7 +30,9 @@ body {
     min-height: 100vh;
 }
 
-/* CABEÇALHO */
+/* ==========================================
+   CABEÇALHO
+========================================== */
 
 .header {
     width: 100%;
@@ -83,7 +92,9 @@ body {
     border-radius: 50%;
 }
 
-/* CATÁLOGO */
+/* ==========================================
+   CATÁLOGO
+========================================== */
 
 .catalog {
     width: 100%;
@@ -110,58 +121,19 @@ body {
     font-weight: 800;
 }
 
-.section-heading h2 span,
-.services-heading h3 span {
+.section-heading h2 span {
     color: var(--gold);
 }
 
-.section-heading p,
-.services-heading p {
+.section-heading p {
     color: var(--gray);
     font-size: 13px;
     line-height: 1.7;
 }
 
-/* NAVEGAÇÃO */
-
-.catalog-nav {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 30px;
-}
-
-.nav-btn {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--gray);
-    padding: 14px 25px;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.nav-btn:hover,
-.nav-btn.active {
-    color: var(--gold);
-    border-bottom-color: var(--gold);
-}
-
-/* SEÇÕES */
-
-.catalog-section {
-    display: none;
-}
-
-.catalog-section.active {
-    display: block;
-}
-
-/* CATEGORIAS */
+/* ==========================================
+   CATEGORIAS
+========================================== */
 
 .category-list {
     display: flex;
@@ -191,7 +163,9 @@ body {
     color: var(--black);
 }
 
-/* CABEÇALHO DOS PRODUTOS */
+/* ==========================================
+   CABEÇALHO DOS PRODUTOS
+========================================== */
 
 .products-header {
     display: flex;
@@ -209,13 +183,18 @@ body {
     color: var(--gray);
 }
 
-/* PRODUTOS */
+/* ==========================================
+   GRADE DE PRODUTOS
+========================================== */
 
-.products-grid {
+#products-container {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20px;
+    width: 100%;
 }
+
+/* CARD */
 
 .product-card {
     background: var(--black-card);
@@ -230,19 +209,17 @@ body {
     border-color: var(--gold);
 }
 
+/* IMAGEM */
+
 .product-image {
+    display: block;
     width: 100%;
     aspect-ratio: 1 / 1;
+    object-fit: cover;
     background: #202020;
-    position: relative;
-    overflow: hidden;
 }
 
-.product-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+/* INFORMAÇÕES */
 
 .product-info {
     padding: 16px;
@@ -256,8 +233,17 @@ body {
     letter-spacing: 1px;
 }
 
-.product-info h4 {
-    font-size: 14px;
+.product-name {
+    font-size: 15px;
+    margin: 8px 0;
+    font-weight: 700;
+    color: var(--white);
+}
+
+.product-description {
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--gray);
     margin: 8px 0;
 }
 
@@ -274,73 +260,42 @@ body {
     margin-bottom: 14px;
 }
 
-.product-btn {
+/* ==========================================
+   BOTÃO WHATSAPP
+========================================== */
+
+.whatsapp-btn,
+.whatsapp-btn:link,
+.whatsapp-btn:visited {
     display: block;
     width: 100%;
-    padding: 12px;
+    padding: 13px 16px;
+    margin-top: 15px;
     background: var(--gold);
     color: var(--black);
     text-align: center;
     text-decoration: none;
-    font-size: 11px;
+    font-family: inherit;
     font-weight: 800;
-    border-radius: 5px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: 1px solid var(--gold);
+    cursor: pointer;
     transition: 0.3s;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
-.product-btn:hover {
+.whatsapp-btn:hover,
+.whatsapp-btn:active {
     background: var(--gold-light);
+    border-color: var(--gold-light);
+    color: var(--black);
 }
 
-/* SERVIÇOS */
-
-.services-heading {
-    text-align: center;
-    margin: 20px 0 30px;
-}
-
-.services-heading h3 {
-    font-size: 28px;
-    margin: 10px 0;
-}
-
-.services-list {
-    max-width: 650px;
-    margin: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.service-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-    padding: 20px;
-    background: var(--black-card);
-    border: 1px solid #292929;
-    border-radius: 7px;
-}
-
-.service-item h4 {
-    font-size: 14px;
-    margin-bottom: 5px;
-}
-
-.service-item p {
-    color: var(--gray);
-    font-size: 11px;
-}
-
-.service-price {
-    color: var(--gold);
-    font-size: 17px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-/* ESTADO VAZIO */
+/* ==========================================
+   ESTADO VAZIO
+========================================== */
 
 .empty-state {
     text-align: center;
@@ -364,7 +319,9 @@ body {
     color: var(--gray);
 }
 
-/* RODAPÉ */
+/* ==========================================
+   RODAPÉ
+========================================== */
 
 .footer {
     border-top: 1px solid var(--border);
@@ -394,9 +351,12 @@ body {
     font-size: 10px;
 }
 
-/* CELULARES E TABLETS */
+/* ==========================================
+   TABLETS E CELULARES
+========================================== */
 
 @media (max-width: 700px) {
+
     .header {
         padding: 16px 5%;
     }
@@ -422,7 +382,7 @@ body {
         padding: 45px 5%;
     }
 
-    .products-grid {
+    #products-container {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
     }
@@ -431,7 +391,7 @@ body {
         padding: 12px;
     }
 
-    .product-info h4 {
+    .product-name {
         font-size: 12px;
     }
 
@@ -439,17 +399,31 @@ body {
         font-size: 16px;
     }
 
+    .product-description {
+        font-size: 10px;
+    }
+
     .category-list {
         justify-content: flex-start;
     }
+
+    .whatsapp-btn,
+    .whatsapp-btn:link,
+    .whatsapp-btn:visited {
+        font-size: 11px;
+        padding: 12px 8px;
+    }
 }
 
+/* CELULARES PEQUENOS */
+
 @media (max-width: 380px) {
+
     .header-status {
         display: none;
     }
 
-    .products-grid {
+    #products-container {
         grid-template-columns: 1fr;
     }
 }
@@ -461,27 +435,3 @@ textarea,
 select {
     font-size: 16px !important;
 }
-
-
-.whatsapp-btn {
-    display: block;
-    width: 100%;
-    padding: 13px 16px;
-    margin-top: 15px;
-    background-color: #D4AF37;
-    color: #0B0B0D;
-    text-align: center;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 15px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.whatsapp-btn:hover {
-    background-color: #f0cf55;
-    transform: translateY(-2px);
-}
-
