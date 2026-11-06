@@ -48,15 +48,19 @@ function normalizarCategoria(categoria) {
 
 // 6. GERAR LINK DO WHATSAPP
 
+
 function gerarLinkWhatsApp(produto) {
-    const mensagem =
+    const mensagem = 
         `Olá! Tenho interesse neste produto:\n\n` +
         `Produto: ${produto.name}\n` +
         `Preço: ${formatarPreco(produto.price)}\n\n` +
         `Gostaria de saber mais sobre a disponibilidade!`;
 
-    return `https://wa.me/${whatsappBarbearia}?text=${encodeURIComponent(mensagem)}`;
+    const numero = "5553984783002";
+
+    return `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensagem)}`;
 }
+
 
 // 7. CARREGAR PRODUTOS DO SUPABASE
 
