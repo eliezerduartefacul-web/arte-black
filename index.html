@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Arte Black | Catálogo</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <header class="header">
+
+        <div class="logo">
+            <span class="logo-icon">AB</span>
+
+            <div class="logo-text">
+                <h1>ARTE BLACK</h1>
+                <span>BARBERSHOP & STORE</span>
+            </div>
+        </div>
+
+        <div class="header-status">
+            <span class="status-dot"></span>
+            CATÁLOGO DIGITAL
+        </div>
+
+    </header>
+
+    <main>
+
+        <section class="catalog">
+
+            <div class="section-heading">
+                <span class="section-tag">ARTE BLACK STORE</span>
+                <h2>Nosso <span>Catálogo</span></h2>
+                <p>Confira nossos produtos e encontre o seu estilo.</p>
+            </div>
+
+            <nav class="catalog-nav">
+                <button class="nav-btn active" data-section="products">
+                    Produtos
+                </button>
+
+                <button class="nav-btn" data-section="services">
+                    Serviços
+                </button>
+            </nav>
+
+            <!-- ÁREA DE PRODUTOS -->
+
+            <section id="products" class="catalog-section active">
+
+                <div class="category-list">
+
+                    <button class="category-btn active" data-category="todos">
+                        Todos
+                    </button>
+
+                    <button class="category-btn" data-category="bone">
+                        Bonés
+                    </button>
+
+                    <button class="category-btn" data-category="camiseta">
+                        Camisetas
+                    </button>
+
+                    <button class="category-btn" data-category="roupa">
+                        Roupas
+                    </button>
+
+                    <button class="category-btn" data-category="acessorio">
+                        Acessórios
+                    </button>
+
+                </div>
+
+                <div class="products-header">
+                    <h3>Produtos disponíveis</h3>
+                    <span id="products-count">0 produtos</span>
+                </div>
+
+                <div id="products-container" class="products-grid">
+
+                    <!-- Os produtos serão carregados aqui -->
+
+                </div>
+
+                <div id="empty-products" class="empty-state">
+                    <span>✦</span>
+                    <h3>Em breve, novidades!</h3>
+                    <p>Nossos produtos aparecerão aqui.</p>
+                </div>
+
+            </section>
+
+            <!-- ÁREA DE SERVIÇOS -->
+
+            <section id="services" class="catalog-section">
+
+                <div class="services-heading">
+                    <span class="section-tag">BARBERSHOP</span>
+                    <h3>Nossos <span>Serviços</span></h3>
+                    <p>Confira nossa tabela de preços.</p>
+                </div>
+
+                <div id="services-container" class="services-list">
+
+                    <!-- Os serviços serão carregados aqui -->
+
+                </div>
+
+                <div id="empty-services" class="empty-state">
+                    <span>✦</span>
+                    <h3>Serviços em atualização</h3>
+                    <p>Consulte nossa equipe para mais informações.</p>
+                </div>
+
+            </section>
+
+        </section>
+
+    </main>
+
+    <footer class="footer">
+
+        <div class="footer-logo">
+            ARTE <span>BLACK</span>
+        </div>
+
+        <p>Estilo, atitude e personalidade.</p>
+
+        <span class="copyright">
+            © <span id="current-year"></span> Arte Black.
+            Todos os direitos reservados.
+        </span>
+
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
