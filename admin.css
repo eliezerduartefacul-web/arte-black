@@ -293,3 +293,11 @@ button:hover {
         padding: 30px 20px;
     }
 }
+
+/* CORREÇÃO DE ZOOM NO IPHONE */
+
+input,
+textarea,
+select {
+    font-size: 16px !important;
+}
