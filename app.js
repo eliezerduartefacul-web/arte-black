@@ -19,14 +19,12 @@ const supabaseClient = window.supabase.createClient(
 
 let produtos = [];
 let servicos = [];
-
 let categoriaAtual = "todos";
 
 
 // 3. ELEMENTOS HTML
 
 const botoesNavegacao = document.querySelectorAll(".nav-btn");
-const botoesCategorias = document.querySelectorAll(".category-btn");
 
 const secaoProdutos = document.getElementById("products");
 const secaoServicos = document.getElementById("services");
@@ -34,6 +32,8 @@ const secaoServicos = document.getElementById("services");
 const containerProdutos = document.getElementById("products-container");
 const contadorProdutos = document.getElementById("products-count");
 const mensagemVazia = document.getElementById("empty-products");
+
+const listaCategorias = document.getElementById("category-list");
 
 
 // 4. NAVEGAÇÃO
@@ -66,28 +66,7 @@ botoesNavegacao.forEach(botao => {
 });
 
 
-// 5. FILTRO DE CATEGORIAS
-
-botoesCategorias.forEach(botao => {
-
-    botao.addEventListener("click", () => {
-
-        categoriaAtual = botao.dataset.category;
-
-        botoesCategorias.forEach(item => {
-            item.classList.remove("active");
-        });
-
-        botao.classList.add("active");
-
-        renderizarProdutos();
-
-    });
-
-});
-
-
-// 6. NORMALIZAR CATEGORIAS
+// 5. NORMALIZAR TEXTO
 
 function normalizarTexto(texto) {
 
@@ -99,37 +78,66 @@ function normalizarTexto(texto) {
 
 }
 
-function pertenceCategoria(categoriaProduto, filtro) {
 
-    const categoria = normalizarTexto(categoriaProduto);
+// 6. CRIAR CATEGORIAS AUTOMATICAMENTE
 
-    if (filtro === "bone") {
-        return categoria.includes("bone");
-    }
+function criarCategorias() {
 
-    if (filtro === "camiseta") {
-        return categoria.includes("camiseta");
-    }
+    listaCategorias.innerHTML = "";
 
-    if (filtro === "roupa") {
-        return (
-            categoria.includes("roupa") ||
-            categoria.includes("calca") ||
-            categoria.includes("jogger") ||
-            categoria.includes("bermuda")
-        );
-    }
+    const todas = document.createElement("button");
 
-    if (filtro === "acessorio") {
-        return categoria.includes("acessorio");
-    }
+    todas.className = "category-btn active";
+    todas.dataset.category = "todos";
+    todas.textContent = "Todos";
 
-    return false;
+    listaCategorias.appendChild(todas);
+
+    const categorias = [
+        ...new Set(
+            produtos
+                .map(produto => String(produto.category || "").trim())
+                .filter(categoria => categoria !== "")
+        )
+    ].sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+    categorias.forEach(categoria => {
+
+        const botao = document.createElement("button");
+
+        botao.className = "category-btn";
+        botao.dataset.category = normalizarTexto(categoria);
+        botao.textContent = categoria;
+
+        listaCategorias.appendChild(botao);
+
+    });
 
 }
 
 
-// 7. FORMATAR PREÇOS
+// 7. FILTRO DE CATEGORIAS
+
+listaCategorias.addEventListener("click", event => {
+
+    const botao = event.target.closest(".category-btn");
+
+    if (!botao) return;
+
+    categoriaAtual = botao.dataset.category;
+
+    listaCategorias.querySelectorAll(".category-btn").forEach(item => {
+        item.classList.remove("active");
+    });
+
+    botao.classList.add("active");
+
+    renderizarProdutos();
+
+});
+
+
+// 8. FORMATAR PREÇOS
 
 function formatarPreco(valor) {
 
@@ -141,10 +149,7 @@ function formatarPreco(valor) {
 }
 
 
-// 8. WHATSAPP
-
-// Coloque o número oficial da barbearia depois.
-// Formato: 55 + DDD + número, somente números.
+// 9. WHATSAPP
 
 const whatsappBarbearia = "";
 
@@ -162,14 +167,14 @@ Gostaria de saber mais sobre a disponibilidade!`;
 }
 
 
-// 9. EXIBIR PRODUTOS
+// 10. EXIBIR PRODUTOS
 
 function renderizarProdutos() {
 
     const produtosFiltrados = categoriaAtual === "todos"
         ? produtos
         : produtos.filter(produto =>
-            pertenceCategoria(produto.category, categoriaAtual)
+            normalizarTexto(produto.category) === categoriaAtual
         );
 
     containerProdutos.innerHTML = "";
@@ -192,7 +197,6 @@ function renderizarProdutos() {
     produtosFiltrados.forEach(produto => {
 
         const card = document.createElement("article");
-
         card.className = "product-card";
 
         const imagemContainer = document.createElement("div");
@@ -200,7 +204,9 @@ function renderizarProdutos() {
 
         const imagem = document.createElement("img");
 
-        imagem.src = produto.image_url || "https://placehold.co/400x300?text=Sem+imagem";
+        imagem.src = produto.image_url ||
+            "https://placehold.co/400x300?text=Sem+imagem";
+
         imagem.alt = produto.name || "Produto Arte Black";
         imagem.loading = "lazy";
 
@@ -255,11 +261,12 @@ function renderizarProdutos() {
 }
 
 
-// 10. BUSCAR PRODUTOS NO SUPABASE
+// 11. BUSCAR PRODUTOS NO SUPABASE
 
 async function carregarProdutos() {
 
     mensagemVazia.style.display = "block";
+
     mensagemVazia.innerHTML = `
         <span>✦</span>
         <h3>Carregando produtos...</h3>
@@ -290,12 +297,14 @@ async function carregarProdutos() {
 
     produtos = data || [];
 
+    criarCategorias();
+
     renderizarProdutos();
 
 }
 
 
-// 11. EXIBIR SERVIÇOS
+// 12. SERVIÇOS
 
 function renderizarServicos() {
 
@@ -319,13 +328,13 @@ function renderizarServicos() {
 }
 
 
-// 12. ANO AUTOMÁTICO
+// 13. ANO AUTOMÁTICO
 
 document.getElementById("current-year").textContent =
     new Date().getFullYear();
 
 
-// 13. INICIALIZAÇÃO
+// 14. INICIALIZAÇÃO
 
 async function iniciarCatalogo() {
 
