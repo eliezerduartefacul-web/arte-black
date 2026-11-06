@@ -461,3 +461,27 @@ textarea,
 select {
     font-size: 16px !important;
 }
+
+
+.whatsapp-btn {
+    display: block;
+    width: 100%;
+    padding: 13px 16px;
+    margin-top: 15px;
+    background-color: #D4AF37;
+    color: #0B0B0D;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 15px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.whatsapp-btn:hover {
+    background-color: #f0cf55;
+    transform: translateY(-2px);
+}
+
