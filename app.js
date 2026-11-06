@@ -49,6 +49,7 @@ function normalizarCategoria(categoria) {
 // 6. GERAR LINK DO WHATSAPP
 
 
+
 function gerarLinkWhatsApp(produto) {
     const mensagem = 
         `Olá! Tenho interesse neste produto:\n\n` +
@@ -58,7 +59,7 @@ function gerarLinkWhatsApp(produto) {
 
     const numero = "5553984783002";
 
-    return `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensagem)}`;
+    return `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
 }
 
 
@@ -230,8 +231,6 @@ function renderizarProdutos() {
 
         botaoWhatsApp.className = "whatsapp-btn";
         botaoWhatsApp.href = gerarLinkWhatsApp(produto);
-        botaoWhatsApp.target = "_blank";
-        botaoWhatsApp.rel = "noopener noreferrer";
         botaoWhatsApp.textContent = "Tenho interesse";
 
         informacoes.appendChild(categoria);
