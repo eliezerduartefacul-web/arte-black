@@ -1,12 +1,11 @@
 
-/* ==========================================
-   ARTE BLACK - CATÁLOGO DIGITAL
-========================================== */
+// ==========================================
+// ARTE BLACK - CATÁLOGO DE PRODUTOS
+// ==========================================
 
-// 1. CONEXÃO COM SUPABASE
+// 1. CONEXÃO COM O SUPABASE
 
 const SUPABASE_URL = "https://xqwullsydwdtimodgygl.supabase.co";
-
 const SUPABASE_KEY = "sb_publishable_ZKsC3krH1eiXVQ7LQ90goQ_iqfigPDB";
 
 const supabaseClient = window.supabase.createClient(
@@ -14,84 +13,95 @@ const supabaseClient = window.supabase.createClient(
     SUPABASE_KEY
 );
 
+// 2. CONFIGURAÇÕES
 
-// 2. VARIÁVEIS
+const whatsappBarbearia = "5553984783002";
 
 let produtos = [];
-let servicos = [];
 let categoriaAtual = "todos";
 
+// 3. ELEMENTOS DO HTML
 
-// 3. ELEMENTOS HTML
-
-const botoesNavegacao = document.querySelectorAll(".nav-btn");
-
-const secaoProdutos = document.getElementById("products");
-const secaoServicos = document.getElementById("services");
-
+const listaCategorias = document.getElementById("category-list");
 const containerProdutos = document.getElementById("products-container");
 const contadorProdutos = document.getElementById("products-count");
 const mensagemVazia = document.getElementById("empty-products");
 
-const listaCategorias = document.getElementById("category-list");
+// 4. FORMATAR PREÇO
 
-
-// 4. NAVEGAÇÃO
-
-botoesNavegacao.forEach(botao => {
-
-    botao.addEventListener("click", () => {
-
-        const secao = botao.dataset.section;
-
-        botoesNavegacao.forEach(item => {
-            item.classList.remove("active");
-        });
-
-        botao.classList.add("active");
-
-        secaoProdutos.classList.remove("active");
-        secaoServicos.classList.remove("active");
-
-        if (secao === "products") {
-            secaoProdutos.classList.add("active");
-        }
-
-        if (secao === "services") {
-            secaoServicos.classList.add("active");
-        }
-
+function formatarPreco(valor) {
+    return Number(valor || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
     });
-
-});
-
-
-// 5. NORMALIZAR TEXTO
-
-function normalizarTexto(texto) {
-
-    return String(texto || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
-
 }
 
+// 5. NORMALIZAR CATEGORIAS
 
-// 6. CRIAR CATEGORIAS AUTOMATICAMENTE
+function normalizarCategoria(categoria) {
+    return String(categoria || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+}
+
+// 6. GERAR LINK DO WHATSAPP
+
+function gerarLinkWhatsApp(produto) {
+    const mensagem =
+        `Olá! Tenho interesse neste produto:\n\n` +
+        `Produto: ${produto.name}\n` +
+        `Preço: ${formatarPreco(produto.price)}\n\n` +
+        `Gostaria de saber mais sobre a disponibilidade!`;
+
+    return `https://wa.me/${whatsappBarbearia}?text=${encodeURIComponent(mensagem)}`;
+}
+
+// 7. CARREGAR PRODUTOS DO SUPABASE
+
+async function carregarProdutos() {
+    containerProdutos.innerHTML = "<p>Carregando produtos...</p>";
+
+    const { data, error } = await supabaseClient
+        .from("products")
+        .select("*")
+        .eq("active", true)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Erro ao carregar produtos:", error);
+
+        containerProdutos.innerHTML =
+            "<p>Não foi possível carregar os produtos. Tente novamente.</p>";
+
+        contadorProdutos.textContent = "0 produtos";
+        mensagemVazia.style.display = "none";
+        return;
+    }
+
+    produtos = data || [];
+
+    criarCategorias();
+    renderizarProdutos();
+}
+
+// 8. CRIAR CATEGORIAS AUTOMATICAMENTE
 
 function criarCategorias() {
-
     listaCategorias.innerHTML = "";
 
-    const todas = document.createElement("button");
+    const botaoTodos = document.createElement("button");
+    botaoTodos.type = "button";
+    botaoTodos.className = "category-btn active";
+    botaoTodos.textContent = "Todos";
+    botaoTodos.dataset.category = "todos";
 
-    todas.className = "category-btn active";
-    todas.dataset.category = "todos";
-    todas.textContent = "Todos";
+    botaoTodos.addEventListener("click", () => {
+        filtrarCategoria("todos");
+    });
 
-    listaCategorias.appendChild(todas);
+    listaCategorias.appendChild(botaoTodos);
 
     const categorias = [
         ...new Set(
@@ -102,246 +112,136 @@ function criarCategorias() {
     ].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
     categorias.forEach(categoria => {
-
         const botao = document.createElement("button");
 
+        botao.type = "button";
         botao.className = "category-btn";
-        botao.dataset.category = normalizarTexto(categoria);
         botao.textContent = categoria;
+        botao.dataset.category = normalizarCategoria(categoria);
+
+        botao.addEventListener("click", () => {
+            filtrarCategoria(categoria);
+        });
 
         listaCategorias.appendChild(botao);
-
     });
-
 }
 
+// 9. FILTRAR PRODUTOS
 
-// 7. FILTRO DE CATEGORIAS
+function filtrarCategoria(categoria) {
+    categoriaAtual = categoria;
 
-listaCategorias.addEventListener("click", event => {
+    document.querySelectorAll(".category-btn").forEach(botao => {
+        const selecionado =
+            categoria === "todos"
+                ? botao.dataset.category === "todos"
+                : botao.dataset.category === normalizarCategoria(categoria);
 
-    const botao = event.target.closest(".category-btn");
-
-    if (!botao) return;
-
-    categoriaAtual = botao.dataset.category;
-
-    listaCategorias.querySelectorAll(".category-btn").forEach(item => {
-        item.classList.remove("active");
+        botao.classList.toggle("active", selecionado);
     });
-
-    botao.classList.add("active");
 
     renderizarProdutos();
-
-});
-
-
-// 8. FORMATAR PREÇOS
-
-function formatarPreco(valor) {
-
-    return Number(valor || 0).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-    });
-
 }
-
-
-// 9. WHATSAPP
-
-const whatsappBarbearia = "";
-
-function gerarLinkWhatsApp(produto) {
-
-    const mensagem = `Olá! Tenho interesse neste produto:
-
-Produto: ${produto.name}
-Preço: ${formatarPreco(produto.price)}
-
-Gostaria de saber mais sobre a disponibilidade!`;
-
-    return `https://wa.me/${whatsappBarbearia}?text=${encodeURIComponent(mensagem)}`;
-
-}
-
 
 // 10. EXIBIR PRODUTOS
 
 function renderizarProdutos() {
-
-    const produtosFiltrados = categoriaAtual === "todos"
-        ? produtos
-        : produtos.filter(produto =>
-            normalizarTexto(produto.category) === categoriaAtual
-        );
-
     containerProdutos.innerHTML = "";
 
+    const produtosFiltrados = produtos.filter(produto => {
+        if (categoriaAtual === "todos") {
+            return true;
+        }
+
+        return (
+            normalizarCategoria(produto.category) ===
+            normalizarCategoria(categoriaAtual)
+        );
+    });
+
     contadorProdutos.textContent =
-        produtosFiltrados.length === 1
-            ? "1 produto"
-            : `${produtosFiltrados.length} produtos`;
+        `${produtosFiltrados.length} produto(s)`;
 
     if (produtosFiltrados.length === 0) {
-
         mensagemVazia.style.display = "block";
-
         return;
-
     }
 
     mensagemVazia.style.display = "none";
 
     produtosFiltrados.forEach(produto => {
-
         const card = document.createElement("article");
         card.className = "product-card";
 
-        const imagemContainer = document.createElement("div");
-        imagemContainer.className = "product-image";
+        // Imagem
 
-        const imagem = document.createElement("img");
+        if (produto.image_url) {
+            const imagem = document.createElement("img");
 
-        imagem.src = produto.image_url ||
-            "https://placehold.co/400x300?text=Sem+imagem";
+            imagem.className = "product-image";
+            imagem.src = produto.image_url;
+            imagem.alt = produto.name || "Produto Arte Black";
+            imagem.loading = "lazy";
 
-        imagem.alt = produto.name || "Produto Arte Black";
-        imagem.loading = "lazy";
+            imagem.onerror = () => {
+                imagem.style.display = "none";
+            };
 
-        imagem.onerror = () => {
-            imagem.src = "https://placehold.co/400x300?text=Sem+imagem";
-        };
+            card.appendChild(imagem);
+        }
 
-        imagemContainer.appendChild(imagem);
+        // Informações
 
         const informacoes = document.createElement("div");
         informacoes.className = "product-info";
 
-        const categoria = document.createElement("span");
+        const categoria = document.createElement("p");
         categoria.className = "product-category";
         categoria.textContent = produto.category || "";
 
-        const nome = document.createElement("h4");
-        nome.textContent = produto.name || "";
+        const nome = document.createElement("h3");
+        nome.className = "product-name";
+        nome.textContent = produto.name || "Produto sem nome";
+
+        const descricao = document.createElement("p");
+        descricao.className = "product-description";
+        descricao.textContent = produto.description || "";
 
         const preco = document.createElement("p");
         preco.className = "product-price";
         preco.textContent = formatarPreco(produto.price);
 
-        const estoque = document.createElement("p");
-        estoque.className = "product-stock";
+        const quantidade = document.createElement("p");
+        quantidade.className = "product-stock";
 
-        estoque.textContent = Number(produto.quantity) > 0
-            ? "Disponível"
-            : "Esgotado";
+        quantidade.textContent =
+            Number(produto.quantity) > 0
+                ? `${produto.quantity} disponível(is)`
+                : "Consulte a disponibilidade";
 
-        const botao = document.createElement("a");
+        // Botão WhatsApp
 
-        botao.className = "product-btn";
-        botao.textContent = "Tenho interesse";
-        botao.href = gerarLinkWhatsApp(produto);
-        botao.target = "_blank";
-        botao.rel = "noopener noreferrer";
+        const botaoWhatsApp = document.createElement("a");
+
+        botaoWhatsApp.className = "whatsapp-btn";
+        botaoWhatsApp.href = gerarLinkWhatsApp(produto);
+        botaoWhatsApp.target = "_blank";
+        botaoWhatsApp.rel = "noopener noreferrer";
+        botaoWhatsApp.textContent = "Tenho interesse";
 
         informacoes.appendChild(categoria);
         informacoes.appendChild(nome);
+        informacoes.appendChild(descricao);
         informacoes.appendChild(preco);
-        informacoes.appendChild(estoque);
-        informacoes.appendChild(botao);
+        informacoes.appendChild(quantidade);
+        informacoes.appendChild(botaoWhatsApp);
 
-        card.appendChild(imagemContainer);
         card.appendChild(informacoes);
-
         containerProdutos.appendChild(card);
-
     });
-
 }
 
+// 11. INICIAR CATÁLOGO
 
-// 11. BUSCAR PRODUTOS NO SUPABASE
-
-async function carregarProdutos() {
-
-    mensagemVazia.style.display = "block";
-
-    mensagemVazia.innerHTML = `
-        <span>✦</span>
-        <h3>Carregando produtos...</h3>
-        <p>Aguarde um instante.</p>
-    `;
-
-    const { data, error } = await supabaseClient
-        .from("products")
-        .select("*")
-        .eq("active", true)
-        .order("created_at", { ascending: false });
-
-    if (error) {
-
-        console.error("Erro ao buscar produtos:", error);
-
-        mensagemVazia.innerHTML = `
-            <span>✦</span>
-            <h3>Não foi possível carregar os produtos.</h3>
-            <p>Verifique sua conexão e tente novamente.</p>
-        `;
-
-        contadorProdutos.textContent = "Erro ao carregar";
-
-        return;
-
-    }
-
-    produtos = data || [];
-
-    criarCategorias();
-
-    renderizarProdutos();
-
-}
-
-
-// 12. SERVIÇOS
-
-function renderizarServicos() {
-
-    const container = document.getElementById("services-container");
-    const mensagem = document.getElementById("empty-services");
-
-    if (!container || !mensagem) return;
-
-    container.innerHTML = "";
-
-    if (servicos.length === 0) {
-
-        mensagem.style.display = "block";
-
-        return;
-
-    }
-
-    mensagem.style.display = "none";
-
-}
-
-
-// 13. ANO AUTOMÁTICO
-
-document.getElementById("current-year").textContent =
-    new Date().getFullYear();
-
-
-// 14. INICIALIZAÇÃO
-
-async function iniciarCatalogo() {
-
-    renderizarServicos();
-
-    await carregarProdutos();
-
-}
-
-iniciarCatalogo();
+carregarProdutos();
