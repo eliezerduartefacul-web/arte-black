@@ -1,14 +1,13 @@
 
 /* ==========================================
    ARTE BLACK - PAINEL ADMINISTRATIVO
-   Conexão com Supabase
 ========================================== */
 
-// 1. CONFIGURAÇÃO DO SUPABASE
+// 1. CONEXÃO COM SUPABASE
 
 const SUPABASE_URL = "https://xqwullsydwdtimodgygl.supabase.co";
 
-const SUPABASE_KEY = "sb_publishable_ZKsC3krH1eiXVQ7LQ90goQ_iqfigPDB";
+const SUPABASE_KEY = "COLOQUE_AQUI_SUA_PUBLISHABLE_KEY";
 
 const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
@@ -16,7 +15,7 @@ const supabaseClient = window.supabase.createClient(
 );
 
 
-// 2. ELEMENTOS DA PÁGINA
+// 2. ELEMENTOS HTML
 
 const loginSection = document.getElementById("login-section");
 const adminSection = document.getElementById("admin-section");
@@ -58,9 +57,10 @@ function showProductMessage(message, error = false) {
 }
 
 
-// 4. VERIFICAR SE O USUÁRIO É ADMINISTRADOR
+// 4. VERIFICAR AUTORIZAÇÃO DO ADMINISTRADOR
 
 async function verifyAdmin(user) {
+
     const { data, error } = await supabaseClient
         .from("admin_users")
         .select("user_id")
@@ -68,54 +68,81 @@ async function verifyAdmin(user) {
         .maybeSingle();
 
     if (error) {
-        console.error("Erro ao verificar administrador:", error);
-        return false;
+        throw new Error(
+            "Erro ao consultar admin_users: " + error.message
+        );
     }
 
-    return Boolean(data);
+    console.log("UID autenticado:", user.id);
+    console.log("Registro encontrado:", data);
+
+    return data !== null;
 }
 
 
-// 5. MOSTRAR O PAINEL
+// 5. ABRIR PAINEL
 
 async function openAdminPanel(user) {
-    const isAdmin = await verifyAdmin(user);
 
-    if (!isAdmin) {
-        showLoginMessage(
-            "Este usuário não possui autorização administrativa.",
-            true
-        );
+    showLoginMessage("Verificando autorização...");
 
-        await supabaseClient.auth.signOut();
-        return;
+    try {
+
+        const isAdmin = await verifyAdmin(user);
+
+        if (!isAdmin) {
+
+            showLoginMessage(
+                "Usuário autenticado, mas não encontrado na tabela admin_users.",
+                true
+            );
+
+            await supabaseClient.auth.signOut();
+
+            return;
+        }
+
+        loginSection.hidden = true;
+        adminSection.hidden = false;
+
+        await loadProducts();
+
+    } catch (error) {
+
+        console.error(error);
+
+        showLoginMessage(error.message, true);
     }
-
-    loginSection.hidden = true;
-    adminSection.hidden = false;
-
-    await loadProducts();
 }
 
 
 // 6. LOGIN
 
 loginForm.addEventListener("submit", async function(event) {
+
     event.preventDefault();
 
-    showLoginMessage("Verificando acesso...");
+    showLoginMessage("Entrando...");
 
     const email = document.getElementById("email").value.trim();
+
     const password = document.getElementById("password").value;
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-    });
+    const { data, error } = await supabaseClient.auth
+        .signInWithPassword({
+            email,
+            password
+        });
 
     if (error) {
-        showLoginMessage("E-mail ou senha incorretos.", true);
-        console.error(error);
+
+        console.error("Erro no login:", error);
+
+        showLoginMessage(
+            "Erro no login: " + error.message,
+            true
+        );
+
         return;
     }
 
@@ -123,13 +150,14 @@ loginForm.addEventListener("submit", async function(event) {
 });
 
 
-// 7. SAIR DO PAINEL
+// 7. SAIR
 
 logoutButton.addEventListener("click", async function() {
+
     const { error } = await supabaseClient.auth.signOut();
 
     if (error) {
-        alert("Não foi possível sair da conta.");
+        alert("Erro ao sair: " + error.message);
         return;
     }
 
@@ -137,7 +165,8 @@ logoutButton.addEventListener("click", async function() {
     loginSection.hidden = false;
 
     loginForm.reset();
-    productForm.reset();
+
+    resetProductForm();
 
     showLoginMessage("");
 });
@@ -146,30 +175,40 @@ logoutButton.addEventListener("click", async function() {
 // 8. CARREGAR PRODUTOS
 
 async function loadProducts() {
+
     productsList.innerHTML = "<p>Carregando produtos...</p>";
 
     const { data, error } = await supabaseClient
         .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
 
     if (error) {
+
         console.error("Erro ao carregar produtos:", error);
 
         productsList.innerHTML =
-            "<p>Erro ao carregar produtos. Verifique as permissões do banco.</p>";
+            "<p>Erro ao carregar produtos: " +
+            escapeHTML(error.message) +
+            "</p>";
 
         return;
     }
+
+    data.sort((a, b) => {
+        return new Date(b.created_at || 0) -
+               new Date(a.created_at || 0);
+    });
 
     renderProducts(data);
 }
 
 
-// 9. PROTEGER TEXTO EXIBIDO NA TELA
+// 9. PROTEGER TEXTOS EXIBIDOS NA TELA
 
 function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, function(character) {
+
+    return String(value ?? "").replace(/[&<>"']/g, function(char) {
+
         const entities = {
             "&": "&amp;",
             "<": "&lt;",
@@ -178,38 +217,48 @@ function escapeHTML(value) {
             "'": "&#39;"
         };
 
-        return entities[character];
+        return entities[char];
     });
 }
 
 
-// 10. MOSTRAR PRODUTOS
+// 10. EXIBIR PRODUTOS
 
 function renderProducts(products) {
-    if (!products || products.length === 0) {
-        productsList.innerHTML = "<p>Nenhum produto cadastrado.</p>";
+
+    if (!products.length) {
+
+        productsList.innerHTML =
+            "<p>Nenhum produto cadastrado.</p>";
+
         return;
     }
 
     productsList.innerHTML = products.map(product => {
+
+        const id = escapeHTML(product.id);
         const name = escapeHTML(product.name);
         const category = escapeHTML(product.category);
         const description = escapeHTML(product.description);
-        const image = escapeHTML(product.image_url || "");
-        const price = Number(product.price || 0).toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
+
+        const image = product.image_url
+            ? escapeHTML(product.image_url)
+            : "https://placehold.co/400x300?text=Sem+imagem";
+
+        const price = Number(product.price || 0).toLocaleString(
+            "pt-BR",
+            {
+                style: "currency",
+                currency: "BRL"
+            }
+        );
 
         const status = product.active ? "Ativo" : "Inativo";
 
         return `
             <article class="product-card">
 
-                <img
-                    src="${image || "https://placehold.co/400x300?text=Sem+imagem"}"
-                    alt="${name}"
-                >
+                <img src="${image}" alt="${name}">
 
                 <h3>${name}</h3>
 
@@ -226,8 +275,7 @@ function renderProducts(products) {
                 <button
                     type="button"
                     data-action="edit"
-                    data-id="${escapeHTML(product.id)}"
-                >
+                    data-id="${id}">
                     Editar
                 </button>
 
@@ -235,13 +283,13 @@ function renderProducts(products) {
                     type="button"
                     class="delete-button"
                     data-action="delete"
-                    data-id="${escapeHTML(product.id)}"
-                >
+                    data-id="${id}">
                     Excluir
                 </button>
 
             </article>
         `;
+
     }).join("");
 }
 
@@ -249,9 +297,10 @@ function renderProducts(products) {
 // 11. ENVIAR IMAGEM PARA O STORAGE
 
 async function uploadProductImage(file) {
+
     const extension = file.name.split(".").pop().toLowerCase();
 
-    const fileName = `${crypto.randomUUID()}.${extension}`;
+    const fileName = crypto.randomUUID() + "." + extension;
 
     const { error } = await supabaseClient.storage
         .from("product-images")
@@ -261,7 +310,7 @@ async function uploadProductImage(file) {
         });
 
     if (error) {
-        throw error;
+        throw new Error("Erro ao enviar imagem: " + error.message);
     }
 
     const { data } = supabaseClient.storage
@@ -272,24 +321,33 @@ async function uploadProductImage(file) {
 }
 
 
-// 12. CADASTRAR OU EDITAR PRODUTO
+// 12. SALVAR PRODUTO
 
 productForm.addEventListener("submit", async function(event) {
+
     event.preventDefault();
 
     saveProductButton.disabled = true;
     saveProductButton.textContent = "Salvando...";
 
     try {
+
         const id = productId.value;
 
         const productData = {
+
             name: productName.value.trim(),
+
             category: productCategory.value.trim(),
+
             description: productDescription.value.trim(),
+
             price: Number(productPrice.value),
+
             quantity: Number(productQuantity.value),
+
             active: productActive.checked
+
         };
 
         if (
@@ -306,9 +364,6 @@ productForm.addEventListener("submit", async function(event) {
         const file = productImage.files[0];
 
         if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                throw new Error("A imagem deve ter no máximo 5 MB.");
-            }
 
             const allowedTypes = [
                 "image/jpeg",
@@ -320,28 +375,36 @@ productForm.addEventListener("submit", async function(event) {
                 throw new Error("Use uma imagem JPG, PNG ou WebP.");
             }
 
+            if (file.size > 5 * 1024 * 1024) {
+                throw new Error("A imagem deve ter no máximo 5 MB.");
+            }
+
             productData.image_url = await uploadProductImage(file);
+        }
+
+        if (!id && !productData.image_url) {
+            productData.image_url = null;
         }
 
         let result;
 
         if (id) {
+
             result = await supabaseClient
                 .from("products")
                 .update(productData)
                 .eq("id", id);
+
         } else {
-            if (!productData.image_url) {
-                productData.image_url = null;
-            }
 
             result = await supabaseClient
                 .from("products")
                 .insert([productData]);
+
         }
 
         if (result.error) {
-            throw result.error;
+            throw new Error(result.error.message);
         }
 
         showProductMessage("Produto salvo com sucesso!");
@@ -351,37 +414,44 @@ productForm.addEventListener("submit", async function(event) {
         await loadProducts();
 
     } catch (error) {
+
         console.error(error);
-        showProductMessage(error.message || "Erro ao salvar produto.", true);
+
+        showProductMessage(error.message, true);
 
     } finally {
+
         saveProductButton.disabled = false;
         saveProductButton.textContent = "Salvar produto";
+
     }
 });
 
 
-// 13. EDITAR PRODUTO
+// 13. EDITAR E EXCLUIR
 
 productsList.addEventListener("click", async function(event) {
+
     const button = event.target.closest("button[data-action]");
 
     if (!button) return;
 
     const id = button.dataset.id;
-    const action = button.dataset.action;
 
-    if (action === "edit") {
+    if (button.dataset.action === "edit") {
         await editProduct(id);
     }
 
-    if (action === "delete") {
+    if (button.dataset.action === "delete") {
         await deleteProduct(id);
     }
 });
 
 
+// 14. ABRIR PRODUTO PARA EDIÇÃO
+
 async function editProduct(id) {
+
     const { data, error } = await supabaseClient
         .from("products")
         .select("*")
@@ -389,23 +459,35 @@ async function editProduct(id) {
         .single();
 
     if (error) {
-        showProductMessage("Não foi possível abrir o produto.", true);
-        console.error(error);
+
+        showProductMessage(
+            "Erro ao abrir produto: " + error.message,
+            true
+        );
+
         return;
     }
 
     productId.value = data.id;
+
     productName.value = data.name || "";
+
     productCategory.value = data.category || "";
+
     productDescription.value = data.description || "";
+
     productPrice.value = data.price ?? "";
+
     productQuantity.value = data.quantity ?? 0;
+
     productActive.checked = Boolean(data.active);
 
     productImage.value = "";
 
     formTitle.textContent = "Editar produto";
+
     saveProductButton.textContent = "Atualizar produto";
+
     cancelEditButton.hidden = false;
 
     window.scrollTo({
@@ -415,9 +497,10 @@ async function editProduct(id) {
 }
 
 
-// 14. EXCLUIR PRODUTO
+// 15. EXCLUIR PRODUTO
 
 async function deleteProduct(id) {
+
     const confirmation = confirm(
         "Tem certeza que deseja excluir este produto?"
     );
@@ -430,8 +513,9 @@ async function deleteProduct(id) {
         .eq("id", id);
 
     if (error) {
-        console.error(error);
-        alert("Não foi possível excluir o produto.");
+
+        alert("Erro ao excluir: " + error.message);
+
         return;
     }
 
@@ -441,15 +525,18 @@ async function deleteProduct(id) {
 }
 
 
-// 15. CANCELAR EDIÇÃO E LIMPAR FORMULÁRIO
+// 16. LIMPAR FORMULÁRIO
 
 function resetProductForm() {
+
     productForm.reset();
 
     productId.value = "";
+
     productActive.checked = true;
 
     formTitle.textContent = "Adicionar produto";
+
     saveProductButton.textContent = "Salvar produto";
 
     cancelEditButton.hidden = true;
@@ -458,19 +545,29 @@ function resetProductForm() {
 cancelEditButton.addEventListener("click", resetProductForm);
 
 
-// 16. VERIFICAR SESSÃO AO ABRIR A PÁGINA
+// 17. VERIFICAR SESSÃO EXISTENTE
 
 async function checkSession() {
+
     const { data, error } = await supabaseClient.auth.getSession();
 
     if (error) {
+
         console.error("Erro ao verificar sessão:", error);
+
+        showLoginMessage(error.message, true);
+
         return;
     }
 
     if (data.session) {
+
         await openAdminPanel(data.session.user);
+
     }
 }
+
+
+// 18. INICIAR PAINEL
 
 checkSession();
